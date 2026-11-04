@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1f6f5c">
+<meta name="description" content="四六级备考：遗忘曲线背单词、例句、短语、语法、作文范文、听力听写、词汇量自测，完全离线可用。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="四六级">
+<meta name="mobile-web-app-capable" content="yes">
+<title>四六级学习台 · CET4 / CET6</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">CET</span>
+      <span class="brand-text">四六级学习台</span>
+    </div>
+
+    <div class="topbar-right">
+      <div class="level-switch" id="level-switch" role="group" aria-label="选择考试级别">
+        <button type="button" data-level="CET4" class="active">四级</button>
+        <button type="button" data-level="CET6">六级</button>
+      </div>
+      <div class="streak" id="streak-badge" title="连续学习天数">
+        <span class="streak-fire">🔥</span><span id="streak-num">0</span>
+      </div>
+      <button type="button" class="icon-btn" id="theme-toggle" aria-label="切换深浅色">◐</button>
+      <button type="button" class="icon-btn" id="menu-toggle" aria-label="菜单">☰</button>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button type="button" data-view="today" class="active">今日</button>
+    <button type="button" data-view="study">背单词</button>
+    <button type="button" data-view="writing">作文</button>
+    <button type="button" data-view="translation">翻译</button>
+    <button type="button" data-view="phrases">短语</button>
+    <button type="button" data-view="grammar">语法</button>
+    <button type="button" data-view="exam">模考</button>
+    <button type="button" data-view="wrong">错题本</button>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- ══════════ 今日 ══════════ -->
+  <section class="view active" id="view-today">
+    <div class="hero-card">
+      <div class="hero-left">
+        <p class="hero-date" id="today-date"></p>
+        <h1 class="hero-title" id="today-greeting">开始今天的学习</h1>
+        <p class="hero-sub" id="today-sub"></p>
+      </div>
+      <button type="button" class="btn btn-primary btn-lg" id="start-study">开始学习</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card accent-review">
+        <span class="stat-label">待复习</span>
+        <strong class="stat-num" id="stat-due">0</strong>
+        <span class="stat-hint">按遗忘曲线到期</span>
+      </div>
+      <div class="stat-card accent-new">
+        <span class="stat-label">今日新词</span>
+        <strong class="stat-num" id="stat-new">0</strong>
+        <span class="stat-hint">目标 <span id="stat-new-goal">20</span> 个</span>
+      </div>
+      <div class="stat-card accent-done">
+        <span class="stat-label">已掌握</span>
+        <strong class="stat-num" id="stat-mastered">0</strong>
+        <span class="stat-hint">共 <span id="stat-total">0</span> 词</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>总体进度</h2>
+        <span class="panel-note" id="mastery-note"></span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="mastery-bar" style="width:0%"></div></div>
+      <div class="legend" id="mastery-legend"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>最近 7 天</h2>
+        <span class="panel-note">每天学了多少词</span>
+      </div>
+      <div class="chart" id="week-chart"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>词汇量自测</h2>
+        <span class="panel-note" id="vocab-note">60 词估算一次</span>
+      </div>
+      <div id="vocab-intro">
+        <p class="vocab-intro-text">
+          从四个频段随机抽 60 个词，只回答「认识 / 不认识」——不用写出意思，
+          凭第一反应即可。测完会估算你的词汇量，并给出备考建议。
+        </p>
+        <div class="row-actions">
+          <button type="button" class="btn btn-primary" id="btn-vocab-start">开始测试</button>
+        </div>
+      </div>
+      <div id="vocab-quiz" hidden>
+        <div class="vocab-bar">
+          <div class="bar-track sm"><div class="bar-fill" id="vocab-bar" style="width:0%"></div></div>
+          <span id="vocab-count">1 / 60</span>
+        </div>
+        <div class="vocab-word" id="vocab-word"></div>
+        <div class="vocab-actions">
+          <button type="button" class="btn" id="vocab-no">不认识</button>
+          <button type="button" class="btn btn-primary" id="vocab-yes">认识</button>
+        </div>
+        <p class="vocab-hint">不确定就点「不认识」，虚高会低估你的实际水平。</p>
+      </div>
+      <div id="vocab-result" hidden></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>学习设置</h2></div>
+      <div class="settings">
+        <label class="field">
+          <span>每日新词量</span>
+          <input type="number" id="set-daily-new" min="5" max="100" step="5" value="20">
+        </label>
+        <label class="field">
+          <span>每日复习上限</span>
+          <input type="number" id="set-review-limit" min="20" max="500" step="20" value="120">
+        </label>
+        <label class="field">
+          <span>朗读语速</span>
+          <input type="range" id="set-tts-rate" min="0.5" max="1.3" step="0.05" value="0.9">
+          <em id="set-tts-rate-val">0.9×</em>
+        </label>
+        <label class="field field-check">
+          <input type="checkbox" id="set-auto-speak" checked>
+          <span>出现单词时自动朗读</span>
+        </label>
+      </div>
+      <div class="row-actions">
+        <button type="button" class="btn" id="btn-export">导出学习进度</button>
+        <button type="button" class="btn" id="btn-import">导入学习进度</button>
+        <button type="button" class="btn" id="btn-install" hidden>安装到主屏幕</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+        <button type="button" class="btn btn-danger" id="btn-reset">清空全部学习记录</button>
+      </div>
+      <p class="settings-note">
+        所有进度只存在本机浏览器里。<b>换设备、清缓存前请先导出备份</b>；
+        导入采用<b>合并</b>方式，不会覆盖你已有的更完整记录。
+      </p>
+      <p class="settings-note" id="pwa-note" hidden></p>
+    </div>
+  </section>
+
+  <!-- ══════════ 背单词 ══════════ -->
+  <section class="view" id="view-study">
+    <div id="study-setup">
+      <div class="panel">
+        <div class="panel-head"><h2>选择练习模式</h2></div>
+        <div class="mode-grid" id="mode-grid">
+          <button type="button" class="mode-card active" data-mode="en2zh">
+            <strong>英 → 中</strong><span>看单词选释义</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="zh2en">
+            <strong>中 → 英</strong><span>看释义选单词</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="spell">
+            <strong>拼写</strong><span>听音 + 拼出单词</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="listen">
+            <strong>听音辨词</strong><span>只靠听力选词</span>
+          </button>
+          <button type="button" class="mode-card" data-mode="dictation">
+            <strong>听力听写</strong><span>听句子写下来</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>本次内容</h2></div>
+        <div class="session-summary" id="session-summary"></div>
+        <p class="backlog-note" id="backlog-note" hidden></p>
+        <div class="row-actions">
+          <button type="button" class="btn btn-primary btn-lg" id="btn-start-session">开始</button>
+          <button type="button" class="btn" id="btn-review-only">只复习到期词</button>
+          <button type="button" class="btn" id="btn-free-browse">浏览词库</button>
+        </div>
+      </div>
+
+      <div class="panel" id="browse-panel" hidden>
+        <div class="panel-head">
+          <h2>词库浏览</h2>
+          <input type="search" id="browse-search" placeholder="搜索单词或释义…">
+        </div>
+        <div class="word-list" id="browse-list"></div>
+        <div class="row-actions"><button type="button" class="btn" id="browse-more">加载更多</button></div>
+      </div>
+    </div>
+
+    <div id="study-session" hidden>
+      <div class="session-bar">
+        <div class="session-progress">
+          <div class="bar-track sm"><div class="bar-fill" id="session-bar" style="width:0%"></div></div>
+          <span id="session-count">0 / 0</span>
+        </div>
+        <button type="button" class="btn btn-sm" id="btn-quit-session">结束</button>
+      </div>
+
+      <div class="quiz-card" id="quiz-card">
+        <div class="quiz-tag" id="quiz-tag"></div>
+        <div class="quiz-prompt" id="quiz-prompt"></div>
+        <button type="button" class="speak-btn" id="quiz-speak" title="朗读">🔊</button>
+        <div class="quiz-body" id="quiz-body"></div>
+        <div class="quiz-feedback" id="quiz-feedback"></div>
+        <button type="button" class="known-btn" id="btn-known" hidden>
+          我早就会了，标记为已掌握
+        </button>
+      </div>
+
+      <div class="rate-bar" id="rate-bar" hidden>
+        <span class="rate-label">这个词你记得怎么样？</span>
+        <div class="rate-btns">
+          <button type="button" class="rate again" data-rate="0">忘记<em>重来</em></button>
+          <button type="button" class="rate hard" data-rate="1">模糊<em>稍后</em></button>
+          <button type="button" class="rate good" data-rate="2">认识<em>进阶</em></button>
+          <button type="button" class="rate easy" data-rate="3">熟练<em>跳级</em></button>
+        </div>
+        <p class="rate-note" id="rate-note" hidden></p>
+      </div>
+    </div>
+
+    <div id="study-done" hidden>
+      <div class="done-card">
+        <div class="done-icon">✓</div>
+        <h2>本轮完成</h2>
+        <div class="done-stats" id="done-stats"></div>
+        <div class="row-actions">
+          <button type="button" class="btn btn-primary" id="btn-again">再来一轮</button>
+          <button type="button" class="btn" id="btn-back-today">回到今日</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ 作文 ══════════ -->
+  <section class="view" id="view-writing">
+    <div class="subnav" id="writing-subnav">
+      <button type="button" data-pane="templates" class="active">模板框架</button>
+      <button type="button" data-pane="samples">完整范文</button>
+      <button type="button" data-pane="linkers">连接词</button>
+      <button type="button" data-pane="upgrades">高级替换词</button>
+      <button type="button" data-pane="tips">考场策略</button>
+    </div>
+    <div id="writing-content"></div>
+  </section>
+
+  <!-- ══════════ 翻译 ══════════ -->
+  <section class="view" id="view-translation">
+    <div class="subnav" id="translation-subnav">
+      <button type="button" data-pane="practice" class="active">翻译练习</button>
+      <button type="button" data-pane="topics">主题表达</button>
+      <button type="button" data-pane="techniques">翻译技巧</button>
+      <button type="button" data-pane="tips">考场策略</button>
+    </div>
+    <div id="translation-content"></div>
+  </section>
+
+  <!-- ══════════ 短语 ══════════ -->
+  <section class="view" id="view-phrases">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>考试常用短语</h2>
+        <span class="panel-note" id="phrase-count"></span>
+      </div>
+      <div class="phrase-tools">
+        <input type="search" id="phrase-search" placeholder="搜索短语或中文释义…">
+        <label class="field-check">
+          <input type="checkbox" id="phrase-hide">
+          <span>遮住释义自测</span>
+        </label>
+      </div>
+      <p class="phrase-tip">
+        点短语可展开释义，点右侧按钮复制。勾选「遮住释义」后先自己想意思，再点开对照。
+      </p>
+    </div>
+    <div id="phrase-list"></div>
+  </section>
+
+  <!-- ══════════ 语法 ══════════ -->
+  <section class="view" id="view-grammar">
+    <div class="panel" style="background:transparent;border:0;box-shadow:none;padding:0 0 4px">
+      <p style="font-size:13.5px;color:var(--muted);line-height:1.7">
+        六个专题覆盖四六级阅读、翻译、写作共同的底层考点。
+        每篇都按「规则 → 正确例句 → 常见错误（错 vs 对）」组织，
+        带 ✗ 的是真实高频错句，考前扫一遍比刷新题更值。
+      </p>
+    </div>
+    <div id="grammar-list"></div>
+  </section>
+
+  <!-- ══════════ 模考 ══════════ -->
+  <section class="view" id="view-exam">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>选择模考方案</h2>
+        <span class="panel-note">按真实考试时间切分</span>
+      </div>
+      <div class="exam-presets" id="exam-presets"></div>
+    </div>
+
+    <div class="panel timer-panel">
+      <div class="timer-ring-wrap">
+        <svg class="timer-ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="ring-bg" cx="100" cy="100" r="88"></circle>
+          <circle class="ring-fg" id="ring-fg" cx="100" cy="100" r="88"></circle>
+        </svg>
+        <div class="timer-center">
+          <div class="timer-section" id="timer-section">准备开始</div>
+          <div class="timer-display" id="timer-display">00:00</div>
+          <div class="timer-total" id="timer-total"></div>
+        </div>
+      </div>
+
+      <div class="row-actions center">
+        <button type="button" class="btn btn-primary btn-lg" id="btn-timer-start">开始</button>
+        <button type="button" class="btn" id="btn-timer-reset">重置</button>
+        <button type="button" class="btn" id="btn-timer-next">下一部分</button>
+      </div>
+
+      <div class="section-list" id="section-list"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>本次模考记录</h2></div>
+      <div class="exam-log" id="exam-log"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ 错题本 ══════════ -->
+  <section class="view" id="view-wrong">
+    <div class="subnav" id="wrong-subnav">
+      <button type="button" data-pane="words" class="active">错词</button>
+      <button type="button" data-pane="notes">真题错题</button>
+    </div>
+
+    <div id="wrong-words-pane">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>答错的单词</h2>
+          <span class="panel-note" id="wrong-count-note"></span>
+        </div>
+        <div class="row-actions">
+          <button type="button" class="btn btn-primary" id="btn-practice-wrong">专项练习错词</button>
+          <button type="button" class="btn" id="btn-clear-wrong">清空错词</button>
+        </div>
+        <div class="word-list" id="wrong-list"></div>
+      </div>
+    </div>
+
+    <div id="wrong-notes-pane" hidden>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>添加真题错题</h2>
+          <span class="panel-note">把做错的真题记下来，考前集中回看</span>
+        </div>
+        <div class="note-form">
+          <label class="field"><span>题目 / 来源</span><input type="text" id="note-source" placeholder="如：2023年6月四级 阅读 Passage 1 第3题"></label>
+          <label class="field"><span>我的答案</span><input type="text" id="note-mine" placeholder="如：B"></label>
+          <label class="field"><span>正确答案</span><input type="text" id="note-right" placeholder="如：D"></label>
+          <label class="field field-block"><span>解析 / 反思</span><textarea id="note-reason" rows="3" placeholder="为什么错？是词不认识、定位错、还是选项理解偏差？"></textarea></label>
+          <div class="row-actions"><button type="button" class="btn btn-primary" id="btn-add-note">添加</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>错题清单</h2>
+          <button type="button" class="btn btn-sm" id="btn-export-notes">导出为文本</button>
+        </div>
+        <div class="note-list" id="note-list"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>四六级学习台 · 数据全部保存在本机浏览器，不上传任何信息</p>
+  <p class="dim">词库：<a href="https://github.com/KyleBing/english-vocabulary" target="_blank" rel="noopener">KyleBing/english-vocabulary</a>（BSD-3）· 例句：<a href="https://tatoeba.org/" target="_blank" rel="noopener">Tatoeba</a>（CC-BY 2.0）+ 本项目手写 · 短语候选：<a href="https://github.com/2ndLA/english-phrases" target="_blank" rel="noopener">2ndLA/english-phrases</a>（CC BY-SA 4.0）</p>
+  <p class="dim">音标：<a href="https://github.com/open-dict-data/ipa-dict" target="_blank" rel="noopener">open-dict-data/ipa-dict</a>（MIT）· 排序依据：六级真题词频（MIT）+ Google 语料词频（仅限教育及个人用途，不可商用）</p>
+  <p class="dim">完整许可条款见 THIRD-PARTY-NOTICES.md · 发音由浏览器内置语音合成提供</p>
+</footer>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="data/cet4.js"></script>
+<script src="data/cet6.js"></script>
+<script src="data/phonetics.js"></script>
+<script src="data/examples.js"></script>
+<script src="data/exam-phrases.js"></script>
+<script src="data/grammar.js"></script>
+<script src="data/writing.js"></script>
+<script src="data/phrases.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
